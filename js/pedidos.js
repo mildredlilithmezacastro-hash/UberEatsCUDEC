@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 let contenidoLista = '';
+
 db.collection("platillos").onSnapshot((datos) => {
     datos.docChanges().forEach((registro) => {
         if (registro.type === "added") {
@@ -23,3 +24,27 @@ function agregarALista(platillo,id){
 }
 
 M.AutoInit();
+
+const formulario = document.getElementById("form-pedido");
+
+formulario.addEventListener("submit", function(e) {
+    e.preventDefault();
+     const platillo = document.getElementById("platillo").value;
+     const direccion = document.getElementById("direccion").value;
+     const idPlatillo = document.getElementById("listaPlatillos").value;
+
+
+    db.collection("pedidos").add({
+        platillo: platillo,
+        direccion: direccion,
+        idPlatillo: idPlatillo
+    })
+    .then(() => {
+        alert("Pedido guardado correctamente");
+        document.querySelector("form").reset();
+    })
+    .catch((error) => {
+        console.error("Error:", error);
+        alert("No se pudo guardar el pedido");
+    });
+});
