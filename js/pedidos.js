@@ -1,50 +1,71 @@
-document.addEventListener('DOMContentLoaded', function() {
-  // nav menu
-  const menus = document.querySelectorAll('.side-menu');
-  M.Sidenav.init(menus, {edge: 'right'});
+document.addEventListener("DOMContentLoaded", () => {
+
+    // Menú lateral
+    const menus = document.querySelectorAll(".side-menu");
+    M.Sidenav.init(menus, { edge: "right" });
+
+    const lista = document.getElementById("listaPlatillos");
+
+    // Cargar platillos desde Firestore
+    db.collection("platillos").onSnapshot((datos) => {
+
+        lista.innerHTML = "";
+
+        datos.forEach((doc) => {
+
+            const platillo = doc.data();
+
+            lista.innerHTML += `
+                <option value="${doc.id}">
+                    ${platillo.nombre}
+                </option>
+            `;
+
+        });
+
+        M.FormSelect.init(document.querySelectorAll("select"));
+        
+    });
+
+   
+    const formulario = document.getElementById("form-pedido");
+
+    formulario.addEventListener("submit", (e) => {
+
+        e.preventDefault();
+
+        db.collection("pedidos").add({
+
+            platillo: document.getElementById("platillo").value,
+            direccion: document.getElementById("direccion").value,
+            idPlatillo: document.getElementById("listaPlatillos").value
+
+        })
+        .then(() => {
+
+            alert("Pedido guardado correctamente.");
+            formulario.reset();
+
+        })
+        .catch((error) => {
+
+            console.error(error);
+            alert("Error al guardar el pedido.");
+
+        });
+
+    });
+
 });
 
-let contenidoLista = '';
-
-db.collection("platillos").onSnapshot((datos) => {
-    datos.docChanges().forEach((registro) => {
-        if (registro.type === "added") {
-            agregarALista(registro.doc.data(), registro.doc.id);
+document.getElementById("btnUbicacion").addEventListener("click",function() {
+            if (navigator.geoLocation){
+                navigator.geoLocation.getCurrentPosition(exito,error);
+            }
+        });
+        function exito(posicion) {
+            alert(posicion.coords.latitude + "," + posicion.coords.longitude);
         }
-    });
-    var elems = document.querySelectorAll('select');
-    M.FormSelect.init(elems);
-});
-
-function agregarALista(platillo,id){
-    contenidoLista += `<option value=' ${id}'>
-    ${platillo.nombre}
-    </Option>`;
-    document.getElementById("listaPlatillos").innerHTML = contenidoLista;
-}
-
-M.AutoInit();
-
-const formulario = document.getElementById("form-pedido");
-
-formulario.addEventListener("submit", function(e) {
-    e.preventDefault();
-     const platillo = document.getElementById("platillo").value;
-     const direccion = document.getElementById("direccion").value;
-     const idPlatillo = document.getElementById("listaPlatillos").value;
-
-
-    db.collection("pedidos").add({
-        platillo: platillo,
-        direccion: direccion,
-        idPlatillo: idPlatillo
-    })
-    .then(() => {
-        alert("Pedido guardado correctamente");
-        document.querySelector("form").reset();
-    })
-    .catch((error) => {
-        console.error("Error:", error);
-        alert("No se pudo guardar el pedido");
-    });
-});
+         function error() {
+            alert("no se pudo obtener ubicacion" );
+        }
