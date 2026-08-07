@@ -39,6 +39,65 @@ function actualizarPlatillo(platillo, id){
   tarjeta.querySelector(".recipe-ingredients").innerHTML = platillo.ingredientes;
   tarjeta.querySelector(".recipe-price").innerHTML = platillo.precio;
 }
+
+let streaming = false;
+const width = 320;
+let height = 0;
+const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
+const foto = document.getElementById('foto');
+const bntFoto = document.getElementById('btnFoto');
+const bntTomarFoto = document.getElementById('tomarFoto');
+
+bntFoto.addEventListener("click", function(){
+  navigator.mediaDevices
+  .getUserMedia({
+    video:{
+      facingMode:{
+        ideal: "environment"
+      }
+    },
+    audio: false
+  })
+  .then((stream) =>{
+    video.srcObject = stream;
+    video.play();
+  })
+  .catch((error) =>{
+    console.log(error);
+  });
+})
+
+video.addEventListener("canplay",() =>{
+  if (!streaming) {
+    height = video.videoHeight / (video.videoHeight/ width);
+    video.setAttribute("width", width);
+    video.setAttribute("height", height);
+    streaming = true;
+  }
+})
+
+bntTomarFoto.addEventListener("click", tomarFoto);
+
+function tomarFoto() {
+  const contexto = canvas.getContext("2d");
+  if (width && height) {
+    canvas.width = width;
+    canvas.height = height;
+    contexto.drawImage(video, 0, 0, width, height);
+    const fotoFinal = canvas.toDataURL("image/png");
+    foto.setAttribute("src", fotoFinal);
+    document.getElementById("foto").value = fotoFinal;
+  }
+  else {
+    limpiarFoto();
+  }
+}
+
+function limpiarFoto(){
+  foto.src = "";
+}
+
 document.querySelector(".recipes").addEventListener("click", (e)=>{
 
     if(e.target.classList.contains("material-icons")){
