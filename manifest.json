@@ -2,6 +2,8 @@
   "name": "Mil rincon del sabor",
   "short_name": "Food mil",
   "theme_color": "#0062ff",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "lang": "ep",
