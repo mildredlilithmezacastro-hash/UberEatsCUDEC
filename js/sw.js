@@ -1,123 +1,154 @@
-const CACHE_NAME = "Mil rincon del sabor -cache-v2";
+// ==========================================
+// NOMBRE DE LA CACHÉ
+// ==========================================
+
+const CACHE_NAME = "mil-rincon-del-sabor-v3";
+
+
+// ==========================================
+// ARCHIVOS PRINCIPALES
+// ==========================================
 
 const ARCHIVOS = [
+
   "./",
   "./index.html",
+
+  // CSS
   "./css/materialize.min.css",
   "./css/styles.css",
+
+  // JavaScript
   "./js/materialize.min.js",
-  "./js/index.js",
   "./js/firebase.js",
+  "./js/index.js",
   "./js/db.js",
+
+  // PWA
   "./manifest.json"
+
 ];
 
 
+// ==========================================
 // INSTALAR SERVICE WORKER
-self.addEventListener(
-  "install",
-  function (event) {
+// ==========================================
 
-    event.waitUntil(
+self.addEventListener("install", function (event) {
 
-      caches
-        .open(CACHE_NAME)
+  event.waitUntil(
 
-        .then(function (cache) {
+    caches.open(CACHE_NAME)
 
-          console.log(
-            "Guardando archivos en caché"
-          );
+      .then(function (cache) {
 
-          return cache.addAll(
-            ARCHIVOS
-          );
+        console.log(
+          "Guardando archivos en caché..."
+        );
 
-        })
+        return cache.addAll(ARCHIVOS);
 
-    );
+      })
 
-    self.skipWaiting();
+  );
 
-  }
-);
+  // Activar inmediatamente
+  self.skipWaiting();
+
+});
 
 
-// ACTIVAR
-self.addEventListener(
-  "activate",
-  function (event) {
+// ==========================================
+// ACTIVAR SERVICE WORKER
+// ==========================================
 
-    event.waitUntil(
+self.addEventListener("activate", function (event) {
 
-      caches
-        .keys()
+  event.waitUntil(
 
-        .then(function (cacheNames) {
+    caches.keys()
 
-          return Promise.all(
+      .then(function (cacheNames) {
 
-            cacheNames.map(
-              function (cacheName) {
+        return Promise.all(
 
-                if (
-                  cacheName !== CACHE_NAME
-                ) {
+          cacheNames.map(function (cacheName) {
 
-                  return caches.delete(
-                    cacheName
-                  );
+            // Eliminar cachés anteriores
+            if (cacheName !== CACHE_NAME) {
 
-                }
+              console.log(
+                "Eliminando caché antigua:",
+                cacheName
+              );
 
-              }
-            )
+              return caches.delete(cacheName);
 
-          );
+            }
 
-        })
+          })
 
-    );
+        );
 
-    self.clients.claim();
+      })
 
-  }
-);
+  );
+
+  // Tomar control inmediatamente
+  self.clients.claim();
+
+});
 
 
+// ==========================================
 // PETICIONES
-self.addEventListener(
-  "fetch",
-  function (event) {
+// ==========================================
 
-    if (
-      event.request.method !== "GET"
-    ) {
+self.addEventListener("fetch", function (event) {
 
-      return;
+  // Solo peticiones GET
+  if (event.request.method !== "GET") {
 
-    }
-
-    event.respondWith(
-
-      caches
-        .match(event.request)
-
-        .then(function (respuesta) {
-
-          if (respuesta) {
-
-            return respuesta;
-
-          }
-
-          return fetch(
-            event.request
-          );
-
-        })
-
-    );
+    return;
 
   }
-);
+
+
+  event.respondWith(
+
+    fetch(event.request)
+
+      .then(function (respuesta) {
+
+        // Guardar una copia actualizada
+        const copia = respuesta.clone();
+
+        caches.open(CACHE_NAME)
+          .then(function (cache) {
+
+            cache.put(
+              event.request,
+              copia
+            );
+
+          });
+
+        // Mostrar la versión actual
+        return respuesta;
+
+      })
+
+      .catch(function () {
+
+        // Si no hay internet,
+        // utilizar la versión guardada
+
+        return caches.match(
+          event.request
+        );
+
+      })
+
+  );
+
+});
